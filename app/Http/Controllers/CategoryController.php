@@ -4,58 +4,72 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
+use App\Helpers\ResponseHelper;
+use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
-    //index
-    public function index(Request $request)
-    {
-        $categories = Category::when($request->keyword, function ($query) use ($request) {
-            $query->where('name', 'like', "%{$request->keyword}%")
-                ->orWhere('description', 'like', "%{$request->keyword}%");
-        })->orderBy('id', 'desc')->paginate(10);
-        return view('pages.categories.index', compact('categories'));
+    public function index()
+    {   
+        //*untuk meanmpilkan data
+        $categories = Category::all();
+        return ResponseHelper::sendResponse('success', 'Data categories', $categories);
     }
 
-    //create
-    public function create()
-    {
-        return view('pages.categories.create');
-    }
-
-    //store
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-
+    {   
+        //*untuk menyimpan
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:categories'
         ]);
 
-        Category::create($request->all());
-        return redirect()->route('categories.index')->with('success', 'Category created successfully');
+        if ($validator->fails()) {
+            return ResponseHelper::sendResponse('error', 'Validasi gagal', $validator->errors(), 400);
+        }
+
+        $category = Category::create(['name' => $request->name]);
+        return ResponseHelper::sendResponse('success', 'Kategori berhasil ditambahkan', $category, 201);
     }
 
-    //edit
-    public function edit(Category $category)
-    {
-        return view('pages.categories.edit', compact('category'));
+    public function show($id)
+    {   
+        //* untuk show(menunjukkan )
+        $category = Category::find($id);
+        if (!$category) {
+            return ResponseHelper::sendResponse('error', 'Kategori tidak ditemukan', null, 404);
+        }
+        return ResponseHelper::sendResponse('success', 'Detail kategori', $category);
     }
 
-    //update
-    public function update(Request $request, Category $category)
-    {
+    public function update(Request $request, $id)
+    {   
+        //*untuk mengubah atau edit
+        $category = Category::find($id);
+        if (!$category) {
+            return ResponseHelper::sendResponse('error', 'Kategori tidak ditemukan', null, 404);
+        }
 
-        $category->name = $request->name;
-        $category->description = $request->description;
-        $category->save();
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:categories,name,' . $id
+        ]);
 
-        return redirect()->route('categories.index')->with('success', 'Category updated successfully');
+        if ($validator->fails()) {
+            return ResponseHelper::sendResponse('error', 'Validasi gagal', $validator->errors(), 400);
+        }
+
+        $category->update(['name' => $request->name]);
+        return ResponseHelper::sendResponse('success', 'Kategori berhasil diperbarui', $category);
     }
 
-    //destroy
-    public function destroy(Category $category)
-    {
+    public function destroy($id)
+    {   
+        //*untuk delete atau destroy
+        $category = Category::find($id);
+        if (!$category) {
+            return ResponseHelper::sendResponse('error', 'Kategori tidak ditemukan', null, 404);
+        }
+
         $category->delete();
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully');
+        return ResponseHelper::sendResponse('success', 'Kategori berhasil dihapus', null);
     }
 }
