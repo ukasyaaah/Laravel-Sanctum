@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -25,5 +26,9 @@ Route::middleware('auth:sanctum')->prefix('categories')->group(function () {
     Route::put('/{id}', [CategoryController::class, 'update']);
     Route::delete('/{id}', [CategoryController::class, 'destroy']);
 });
+
+Route::middleware('auth:sanctum')->apiResource('products', \App\Http\Controllers\ProductController::class);
+
+
 
 
