@@ -3,85 +3,40 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Mendapatkan semua produk (GET)
     public function index()
     {
-        $products = Product::with('category')->get();
-        return response()->json($products, Response::HTTP_OK);
+        $products = Product::all();
+        return response()->json($products);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Menyimpan produk baru (POST)
     public function store(Request $request)
     {
         $request->validate([
-            'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'image' => 'nullable|string',
-            'criteria' => 'nullable|string',
-            'favorite' => 'nullable|boolean',
-            'status' => 'nullable|string',
-            'stock' => 'required|integer',
+            'category' => 'required|string|max:255'
         ]);
 
-        // Create product
         $product = Product::create($request->all());
-        return response()->json($product, Response::HTTP_CREATED);
+
+        return response()->json(['message' => 'Product created successfully', 'product' => $product], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        $product = Product::with('category')->find($id);
-
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        return response()->json($product, Response::HTTP_OK);
-    }
-    
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    // Menampilkan produk berdasarkan ID (GET)
+    public function show($id)
     {
         $product = Product::find($id);
-
         if (!$product) {
-            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
+            return response()->json(['message' => 'Product not found'], 404);
         }
-
-        $product->update($request->all());
-        return response()->json($product, Response::HTTP_OK);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $product = Product::find($id);
-
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $product->delete();
-        return response()->json(['message' => 'Product deleted'], Response::HTTP_NO_CONTENT);
-    
+        return response()->json($product);
     }
 }

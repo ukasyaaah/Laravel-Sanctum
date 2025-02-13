@@ -1,34 +1,18 @@
 <?php
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\ProductController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
-Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
-});
-
-//!category
-Route::middleware('auth:sanctum')->prefix('categories')->group(function () {
-    Route::get('/', [CategoryController::class, 'index']);
-    Route::post('/', [CategoryController::class, 'store']);
-    Route::get('/{id}', [CategoryController::class, 'show']);
-    Route::put('/{id}', [CategoryController::class, 'update']);
-    Route::delete('/{id}', [CategoryController::class, 'destroy']);
-});
-
-Route::middleware('auth:sanctum')->apiResource('products', \App\Http\Controllers\ProductController::class);
+//! auth
+Route::post('/register', [AuthController::class, 'register']); //* ini untuk register
+Route::post ('/login', [AuthController::class, 'login']); //*ini untuk login
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum'); //* ini untuk logout
+Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'getUser']); //*ini untuk mengembil data user yg sedang login
+Route::post('/register', [AuthController::class, 'register']);
 
 
-
+Route::middleware('auth:sanctum')->apiResource('products', ProductController::class);
 
