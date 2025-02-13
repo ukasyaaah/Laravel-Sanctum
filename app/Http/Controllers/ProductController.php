@@ -4,39 +4,86 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Response;
 
 class ProductController extends Controller
 {
-    // Mendapatkan semua produk (GET)
+    // GET /products
     public function index()
     {
-        $products = Product::all();
-        return response()->json($products);
+        $products = Product::with('category')->get();
+        return response()->json($products, Response::HTTP_OK);
     }
 
-    // Menyimpan produk baru (POST)
+    // POST /products
     public function store(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
+            'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'category' => 'required|string|max:255'
+            'image' => 'nullable|string',
+            'criteria' => 'nullable|string',
+            'favorite' => 'nullable|boolean',
+            'status' => 'nullable|string',
+            'stock' => 'required|integer',
         ]);
 
-        $product = Product::create($request->all());
+        $product = Product::create($validatedData);
 
-        return response()->json(['message' => 'Product created successfully', 'product' => $product], 201);
+        return response()->json($product, Response::HTTP_CREATED);
     }
 
-    // Menampilkan produk berdasarkan ID (GET)
+    // GET /products/{id}
     public function show($id)
     {
-        $product = Product::find($id);
+        $product = Product::with('category')->find($id);
+
         if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
+            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
         }
-        return response()->json($product);
+
+        return response()->json($product, Response::HTTP_OK);
+    }
+
+    // PUT/PATCH /products/{id}
+    public function update(Request $request, $id)
+    {
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $validatedData = $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+            'image' => 'nullable|string',
+            'criteria' => 'nullable|string',
+            'favorite' => 'nullable|boolean',
+            'status' => 'nullable|string',
+            'stock' => 'required|integer',
+        ]);
+
+        $product->update($validatedData);
+
+        return response()->json($product, Response::HTTP_OK);
+    }
+
+    // DELETE /products/{id}
+    public function destroy($id)
+    {
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $product->delete();
+
+        return response()->json(['message' => 'Product deleted successfully'], Response::HTTP_OK);
     }
 }
