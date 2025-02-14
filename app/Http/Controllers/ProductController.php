@@ -2,20 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
+use App\Models\product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
-class ProductController extends Controller
+class productController extends Controller
 {
-    // GET /products
+    // GET: Ambil semua data product
     public function index()
     {
-        $products = Product::with('category')->get();
-        return response()->json($products, Response::HTTP_OK);
+        try {
+            $products = product::all();
+            return response()->json($products, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error retrieving products', 'error' => $e->getMessage()], 500);
+        }
     }
 
-    // POST /products
+    // POST: Simpan data product baru
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -34,20 +39,22 @@ class ProductController extends Controller
 
         return response()->json($product, Response::HTTP_CREATED);
     }
-
-    // GET /products/{id}
+    
+    // GET: Ambil satu data product berdasarkan ID
     public function show($id)
     {
-        $product = Product::with('category')->find($id);
-
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
+        try {
+            $product = product::find($id);
+            if (!$product) {
+                return response()->json(['message' => 'product not found'], 404);
+            }
+            return response()->json($product, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error retrieving product', 'error' => $e->getMessage()], 500);
         }
-
-        return response()->json($product, Response::HTTP_OK);
     }
 
-    // PUT/PATCH /products/{id}
+    // PUT/PATCH: Update data product berdasarkan ID
     public function update(Request $request, $id)
     {
         $product = Product::find($id);
@@ -73,17 +80,19 @@ class ProductController extends Controller
         return response()->json($product, Response::HTTP_OK);
     }
 
-    // DELETE /products/{id}
+    // DELETE: Hapus data product berdasarkan ID
     public function destroy($id)
     {
-        $product = Product::find($id);
+        try {
+            $product = product::find($id);
+            if (!$product) {
+                return response()->json(['message' => 'product not found'], 404);
+            }
 
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
+            $product->delete();
+            return response()->json(['message' => 'product deleted successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error deleting product', 'error' => $e->getMessage()], 500);
         }
-
-        $product->delete();
-
-        return response()->json(['message' => 'Product deleted successfully'], Response::HTTP_OK);
     }
 }
